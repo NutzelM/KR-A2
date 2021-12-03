@@ -1,0 +1,14 @@
+networkx
+numpy
+scipy
+pandas
+pyparsing
+pytorch
+statsmodels
+tqdm
+joblib
+pgmpy
+scikit-learn
+networkx~=2.6.3
+matplotlib~=3.4.3
+pgmpy~=0.1.16
