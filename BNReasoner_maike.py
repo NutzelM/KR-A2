@@ -1,6 +1,7 @@
 from typing import Union
-from BayesNet import BayesNet
 
+from networkx.algorithms.dag import descendants
+from BayesNet import BayesNet
 
 class BNReasoner:
     def __init__(self, net: Union[str, BayesNet]):
@@ -14,8 +15,26 @@ class BNReasoner:
             self.bn.load_from_bifxml(net)
         else:
             self.bn = net
+
 file_path = "testing/lecture_example.BIFXML"
 network = BNReasoner(file_path)
-print(network)
+BN = network.bn
+#BN.draw_structure()
+vars = BN.get_all_variables()
+for x in vars:
+    parents = BN.get_parents(x)
+    descendants = BN.get_descendants(x, [])
+    non_descendents = BN.get_non_descendents(x)
+    print('---------------------------------')
+    print(f'variabale {x}')
+    print(f'parents are {parents}')
+    print(f'children are {descendants}')
+    print(f'non_descendents are {non_descendents}')
+    print('---------------------------------')
 
-    # TODO: This is where your methods should go
+
+print(BN.get_children(vars[0]))
+
+
+#def dSep(X,Y,Z, G):
+

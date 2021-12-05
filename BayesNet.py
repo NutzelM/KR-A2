@@ -1,6 +1,8 @@
 from typing import List, Tuple, Dict
 import networkx as nx
 import matplotlib.pyplot as plt
+from networkx.algorithms.dag import descendants
+from numpy.core.fromnumeric import var
 from pgmpy.readwrite import XMLBIFReader
 import math
 import itertools
@@ -84,7 +86,42 @@ class BayesNet:
         :return: List of children
         """
         return [c for c in self.structure.successors(variable)]
+   
+    def get_parents(self, variable: str) -> List[str]:
+        """
+        Returns the parents of the variable in the graph.
+        :param variable: Variable to get the parents from
+        :return: List of parents
+        """
+        return [c for c in self.structure.predecessors(variable)]
+    
+   
+    def get_descendants(self, variable: str, descendants: List) -> List[str]:
+        """
+        Returns the descendents of the variable in the graph.
+        :param variable: Variable to get the parents from
+        :param descendants: list of descendents of Variable
+        :return: List of descendents
+        """
+        children = self.get_children(variable)
+        for child in children:
+            if child not in descendants : descendants.append(child)
+            self.get_descendants(child, descendants)
+        return descendants
 
+    
+    def get_non_descendents(self, variable: str) -> List[str]:
+        """
+        Returns the non_descendents of the variable in the graph.
+        :param variable: Variable to get the non decendents from
+        :return: List of non decendents
+        """
+        parents = self.get_parents(variable)
+        descendants = self.get_descendants(variable, [])
+        vars = self.get_all_variables()
+        return [c for c in vars if c not in (descendants or parents) if c != variable] 
+   
+   
     def get_cpt(self, variable: str) -> pd.DataFrame:
         """
         Returns the conditional probability table of a variable in the BN.
