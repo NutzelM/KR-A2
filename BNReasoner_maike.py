@@ -2,6 +2,7 @@ from typing import Union
 
 from networkx.algorithms.dag import descendants
 from BayesNet import BayesNet
+import pandas as pd
 
 class BNReasoner:
     def __init__(self, net: Union[str, BayesNet]):
@@ -25,15 +26,41 @@ for x in vars:
     parents = BN.get_parents(x)
     descendants = BN.get_descendants(x, [])
     non_descendents = BN.get_non_descendents(x)
-    print('---------------------------------')
-    print(f'variabale {x}')
-    print(f'parents are {parents}')
-    print(f'children are {descendants}')
-    print(f'non_descendents are {non_descendents}')
-    print('---------------------------------')
+    # print('---------------------------------')
+    # print(f'variabale {x}')
+    # print(f'parents are {parents}')
+    # print(f'children are {descendants}')
+    # print(f'non_descendents are {non_descendents}')
+    # print('---------------------------------')
 
-
-print(BN.get_children(vars[0]))
+#print(BN.get_all_cpts()['Slippery Road?'])
+#print(BN.get_compatible_instantiations_table(pd.Series(("Winter?", False), ("Rain", True)), BN.get_all_cpts()['Rain?']))
+all_cpts = BN.get_all_cpts()
+all_vars = all_cpts.keys()
+# for v in all_vars:
+    
+#     print(f"for variable {v} the cpt is")
+#     df = all_cpts[v]
+#     print(df)
+#     print(".............")
+BN.summing_out('Winter?') 
+# all_cpts = BN.get_all_cpts()
+# all_vars = all_cpts.keys()
+# for v in all_vars:
+#     if v == 'Wet Grass?' or v == 'Rain?' or v == 'Sprinkler?':
+#         print(f"for variable {v} the cpt is")
+#         df = all_cpts[v]
+#         print(df)
+#     print(".............")
+BN.summing_out('Sprinkler?') 
+# all_cpts = BN.get_all_cpts()
+# all_vars = all_cpts.keys()
+# for v in all_vars:
+#     if v == 'Wet Grass?' or v == 'Rain?' or v == 'Sprinkler?':
+#         print(f"for variable {v} the cpt is")
+#         df = all_cpts[v]
+#         print(df)
+#     print(".............")
 
 
 #def dSep(X,Y,Z, G):

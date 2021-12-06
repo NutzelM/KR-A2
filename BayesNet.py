@@ -1,12 +1,15 @@
+from os import name
 from typing import List, Tuple, Dict
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.algorithms.dag import descendants
 from numpy.core.fromnumeric import var
+from pandas.core.frame import DataFrame
 from pgmpy.readwrite import XMLBIFReader
 import math
 import itertools
 import pandas as pd
+import numpy as np
 from copy import deepcopy
 
 
@@ -168,6 +171,38 @@ class BayesNet:
                     if not int_graph.has_edge(involved_vars[i], involved_vars[j]):
                         int_graph.add_edge(involved_vars[i], involved_vars[j])
         return int_graph
+
+    def summing_out(self, variable) -> None:
+        """
+        Sums out variable of all the tables in all_cpts and updates the table
+        :param: variable: the variable to be summed out
+        :return: None.
+        """
+        all_cpts = self.get_all_cpts()
+        variable_cpt = all_cpts[variable]
+        for key in all_cpts:
+            # if the variable is part of conditional probability but not cps of variable itsself 
+            list_of_vars = list(all_cpts[key].columns)
+            if variable == list_of_vars[0] and variable != key and len(list_of_vars) > 2:
+                cpt = all_cpts[key]
+                variable_true_table = variable_cpt.loc[variable_cpt[variable] == True]
+                variable_true_value = float(variable_true_table['p'].values)
+                variable_false_table = variable_cpt.loc[variable_cpt[variable] == False]
+                variable_false_value = float(variable_false_table['p'].values)
+                # mutiplies factors
+                cpt['p'] = cpt['p'] * np.where(cpt[variable] == True, variable_true_value, variable_false_value)
+                # list of variables that should stay in table
+                in_between_vars = list_of_vars[1:-1]
+                # summing out variable
+                cpt = cpt.groupby(in_between_vars, as_index=False)['p'].sum()
+                # update dictionary with new table
+                self.update_cpt(key, cpt)
+
+
+                
+
+                
+
 
     @staticmethod
     def get_compatible_instantiations_table(instantiation: pd.Series, cpt: pd.DataFrame):
