@@ -172,6 +172,18 @@ class BayesNet:
                         int_graph.add_edge(involved_vars[i], involved_vars[j])
         return int_graph
 
+    def get_neighbors_from_int_graph(self, graph, variable):
+        """
+        Returns the neighbors from the interaction graph of a given variable.
+        :return: The variable neighbors from the given variable based on the constructed interaction graph.
+        """
+        neighbors = nx.neighbors(graph, variable)
+    
+        return neighbors
+        
+        
+
+
     def summing_out(self, variable) -> None:
         """
         Sums out variable of all the tables in all_cpts and updates the table
