@@ -43,7 +43,7 @@ all_vars = all_cpts.keys()
 #     df = all_cpts[v]
 #     print(df)
 #     print(".............")
-BN.summing_out('Winter?') 
+#BN.summing_out('Winter?') 
 # all_cpts = BN.get_all_cpts()
 # all_vars = all_cpts.keys()
 # for v in all_vars:
@@ -52,7 +52,7 @@ BN.summing_out('Winter?')
 #         df = all_cpts[v]
 #         print(df)
 #     print(".............")
-BN.summing_out('Sprinkler?') 
+#BN.summing_out('Sprinkler?') 
 # all_cpts = BN.get_all_cpts()
 # all_vars = all_cpts.keys()
 # for v in all_vars:
@@ -61,7 +61,7 @@ BN.summing_out('Sprinkler?')
 #         df = all_cpts[v]
 #         print(df)
 #     print(".............")
-
+BN.posteriour_marginal(pd.Series({'Winter?' : True}), ['Rain?'])
 
 #def dSep(X,Y,Z, G):
 

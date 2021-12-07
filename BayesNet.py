@@ -198,6 +198,44 @@ class BayesNet:
                 # update dictionary with new table
                 self.update_cpt(key, cpt)
 
+    def posteriour_marginal(self, E, Q) -> None:
+        """
+        Sums out variable of all the tables in all_cpts and updates the table
+        :param: E: evidence
+        :param: Q: subset of variables
+        :return: None.
+        """
+        E_list = []
+        for val, key in E.items():
+            E_list.append(val)
+            
+        all_cpts = self.get_all_cpts()
+        all_variables = all_cpts.keys()
+        for key in all_cpts:
+            print(all_cpts[key])
+            cpt_recuded = self.reduce_factor(E, all_cpts[key])
+            self.update_cpt(key, cpt_recuded)
+        # first eliminate variables in E:
+        for e in E_list:
+            print(e)
+            self.summing_out(e)
+        # then eliminates elements not in E or Q
+        all_cpts = self.get_all_cpts()
+        all_variables = all_cpts.keys()
+        for x in all_variables:
+            if x not in (Q or E_list) :
+                self.summing_out(x)
+        for q in Q:
+            all_cpts = self.get_all_cpts()
+            cpt = all_cpts[q]
+            cpt['p'] = cpt.div(E_list[0])
+            print(cpt)
+            #cpt['p']/cpt[Q.key()]
+        
+            
+
+        
+        
 
                 
 
