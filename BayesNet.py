@@ -249,10 +249,7 @@ class BayesNet:
         :param: Q: subset of variables
         :return: None.
         """
-        E_key_list = []
-        for key in sorted(E.keys()):
-            E_key_list.append(key)
-            
+    
         all_cpts = self.get_all_cpts()
         # eliminate in min degree order 
         pi = self.min_degree_order()
@@ -276,7 +273,6 @@ class BayesNet:
             E_key_list.append(key)
             
         all_cpts = self.get_all_cpts()
-        all_variables = all_cpts.keys()
         # reduce all cpts with factor E
         for key in all_cpts:
             cpt_recuded = self.reduce_factor(E, all_cpts[key])
