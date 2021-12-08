@@ -11,6 +11,7 @@ import itertools
 import pandas as pd
 import numpy as np
 from copy import deepcopy
+import operator 
 
 
 class BayesNet:
@@ -171,6 +172,38 @@ class BayesNet:
                     if not int_graph.has_edge(involved_vars[i], involved_vars[j]):
                         int_graph.add_edge(involved_vars[i], involved_vars[j])
         return int_graph
+    
+    def draw_interaction(self, Graph) -> None:
+        """
+        Visualize structure of the Graph.
+        """
+        nx.draw(Graph, with_labels=True, node_size=3000)
+        plt.show()
+
+    def min_degree_order(self):
+        """
+        Returns a oder in elimination order.
+        :return: ordering pi of variables 
+        """
+        pi_list = []
+        all_vars = self.get_all_variables()
+        G = self.get_interaction_graph()
+        # variable with least amount of neighbours
+        while len(all_vars) > 0:
+            pi = min(G.degree(all_vars), key=operator.itemgetter(1))[0]
+            pi_list.append(pi)
+            # all the neigbours of var_min_neighvours
+            neighbours_pi = list(G.neighbors(pi))
+            # add edge between non-ajacent neighbours
+            for n in neighbours_pi:
+                for n2 in neighbours_pi:
+                    if G.number_of_edges(n,n2) == 0 and n is not n2:
+                        G.add_edge(n, n2)
+            G.remove_node(pi)
+            all_vars.remove(pi)
+            #self.draw_interaction(G)
+        return pi_list
+
 
     def summing_out(self, variable) -> None:
         """
@@ -197,7 +230,28 @@ class BayesNet:
                 cpt = cpt.groupby(in_between_vars, as_index=False)['p'].sum()
                 # update dictionary with new table
                 self.update_cpt(key, cpt)
-
+    
+    def prior_marginal(self, Q):
+        """
+        computes the prior marginal P(Q)
+        :param: Q: subset of variables
+        :return: None.
+        """
+        E_key_list = []
+        for key in sorted(E.keys()):
+            E_key_list.append(key)
+            
+        all_cpts = self.get_all_cpts()
+        # eliminate in min degree order 
+        pi = self.min_degree_order()
+        for x in pi:
+            self.summing_out(x)
+        all_cpts = self.get_all_cpts()
+        #TODO: combine relevant tables
+        for key in all_cpts:
+            if key in Q :
+                print(all_cpts[key])
+    
     def posteriour_marginal(self, E, Q) -> None:
         """
         Sums out variable of all the tables in all_cpts and updates the table
@@ -205,43 +259,27 @@ class BayesNet:
         :param: Q: subset of variables
         :return: None.
         """
-        E_list = []
-        for val, key in E.items():
-            E_list.append(val)
+        E_key_list = []
+        for key in sorted(E.keys()):
+            E_key_list.append(key)
             
         all_cpts = self.get_all_cpts()
         all_variables = all_cpts.keys()
+        # reduce all cpts with factor E
         for key in all_cpts:
-            print(all_cpts[key])
             cpt_recuded = self.reduce_factor(E, all_cpts[key])
             self.update_cpt(key, cpt_recuded)
-        # first eliminate variables in E:
-        for e in E_list:
-            print(e)
-            self.summing_out(e)
-        # then eliminates elements not in E or Q
+        # eliminate in min degree order 
+        pi = self.min_degree_order()
+        for x in pi:
+            self.summing_out(x)
         all_cpts = self.get_all_cpts()
-        all_variables = all_cpts.keys()
-        for x in all_variables:
-            if x not in (Q or E_list) :
-                self.summing_out(x)
-        for q in Q:
-            all_cpts = self.get_all_cpts()
-            cpt = all_cpts[q]
-            cpt['p'] = cpt.div(E_list[0])
-            print(cpt)
-            #cpt['p']/cpt[Q.key()]
-        
-            
+        #TODO: combine relevant tables
+        for key in all_cpts:
+            if key in Q :
+                print(all_cpts[key])
 
-        
-        
-
-                
-
-                
-
-
+     
     @staticmethod
     def get_compatible_instantiations_table(instantiation: pd.Series, cpt: pd.DataFrame):
         """
