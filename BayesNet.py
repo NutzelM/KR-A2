@@ -249,7 +249,7 @@ class BayesNet:
         :param: Q: subset of variables
         :return: None.
         """
-    
+
         all_cpts = self.get_all_cpts()
         # eliminate in min degree order 
         pi = self.min_degree_order()
@@ -276,6 +276,7 @@ class BayesNet:
         # reduce all cpts with factor E
         for key in all_cpts:
             cpt_recuded = self.reduce_factor(E, all_cpts[key])
+            # deletes cells with p = 0
             self.update_cpt(key, cpt_recuded)
         # eliminate in min degree order 
         pi = self.min_degree_order()
