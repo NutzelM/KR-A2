@@ -164,10 +164,13 @@ def posterior_marginal(E: pd.Series, Q: list, BN: BayesNet):
         df_post_marg = summing_out[Q[0]]
     
     # normalising
+    # with more than 1 variable in evidence: 
     if len(E.index.values) > 1:
         df_pr = merge_columns(summing_out, E.index.values)  # merge columns of Pr 
         pr = df_pr[df_pr['p'] != 0]['p'].values[0]          # get Pr value of evidence
         df_post_marg['p'] = df_post_marg['p'] / pr          # normalise by Pr of evidence
+    
+    # only one variable in evidence:
     else:
         df_pr = summing_out[E.index.values[0]]              # merge columns of Pr 
         pr = df_pr[df_pr['p'] !=0]['p'].values              # get Pr value of evidence
