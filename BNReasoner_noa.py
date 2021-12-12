@@ -7,7 +7,6 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 
-
 class BNReasoner:
     def __init__(self, net: Union[str, BayesNet]):
         """
@@ -22,7 +21,13 @@ class BNReasoner:
             self.bn = net
 
 
-def min_degree_order(BN):
+def min_degree_order(BN: BayesNet) -> list:
+    """
+    Computes the order of variables that needs to be followed for the summing-out 
+
+    :param BN: BayesNet class
+    :return: list of the order of variables
+    """
 
     variables = BN.get_all_variables()
     graph = BN.get_interaction_graph()
@@ -47,10 +52,14 @@ def min_degree_order(BN):
     return pi_order
 
 
-def compute_marginals(order):
+def compute_marginals(order: list, BN: BayesNet) -> pd.DataFrame:
+    """
+    Computes the marginals for each variable by using multiplication and summing out
 
-
-    multiplication = defaultdict(list)
+    :param order: the order for which all marginals are being computed
+    :param BN: BayesNet class
+    :return: pandas dataframes for each variable with their 'p' 
+    """
 
     for pi in order:
         all_cpts = BN.get_all_cpts()    
@@ -64,33 +73,98 @@ def compute_marginals(order):
                 merge_vars = all_cpts[pi].merge(all_cpts[var], on=cols)
                 multiply = merge_vars.assign(p = merge_vars.p_x*merge_vars.p_y).drop(columns=['p_x', 'p_y'])
                 
-                multiplication[str(list(multiply.columns))].append(multiply)
-
                 # summing out
                 in_between_vars = list_of_vars[1:-1]
                 summing = multiply.groupby(in_between_vars, as_index=False)['p'].sum()
-                
-                #summing_out[str(list(summing.columns)[0:-1])].append(summing)
-                
+       
                 BN.update_cpt(var, summing)
     
     summing_out = BN.get_all_cpts()
 
-    return multiplication, summing_out
+    return summing_out
 
+def merge_columns(df_summed_out: pd.DataFrame, Q: list):
+    """
+    Merges the columns for the variables Q by multiplying on each others marginals columns 
 
-def prior_marginal(Q, BN):
+    :param df_summed_out: the computed  marginals for each variable Q
+    :param Q: list of variables of interest
+    :return: pandas dataframe with the merged multiplication column 'p' and each variable Q truth assignment column
+    """
+
+    df_merged = df_summed_out[Q[0]]
+    for i in range(len(Q)-1):
+        df_merged = df_merged.merge(df_summed_out[Q[i+1]], how='cross')
+    df_pior_marginal = df_merged[Q]
+    df_values = df_merged.drop(columns = Q)
     
+    # multiply all columns
+    p_multiplied = df_values.iloc[:, 0]
+    for i in range(len(df_values.columns)-1):
+        p_multiplied *= df_values.iloc[:, i+1]
+    df_pior_marginal['p'] = p_multiplied
+
+    return df_pior_marginal
+
+
+def prior_marginal(Q: list, BN: BayesNet):
+    """
+    Computes the prior marginal distribution for one or multiple variables.
+
+    :param Q: list of variables of interest
+    :param BN: BayesNet class
+    :return: pandas dataframe with the computed marginals and truth values of each variable Q
+    """
+
     #elimination order
     order = min_degree_order(BN)
-    order = filter(lambda i: i not in Q, order)
-
+  
     # computing procedure 
-    multiplication, summing_out = compute_marginals(order)
-    print(multiplication)
-    print(summing_out)
+    summing_out = compute_marginals(order, BN)
+    
+    # if more variables are asked
+    if len(Q) > 1:
+        df_prior_marginal = merge_columns(summing_out, Q)
+    
+    # if one variable
+    else:
+        df_pior_marginal = summing_out[Q[0]]
+    
+    return df_pior_marginal
 
-    return 
+def posterior_marginal(E: pd.Series, Q: list, BN: BayesNet):
+    """
+    Computes the posterior marginal distribution for one or multiple variables.
+
+    :param E: evidence. E.g.: pd.Series({"A", True}, {"B", False})
+    :param Q: list of variables
+    :param BN: BayesNet class
+    :return: pandas dataframe with the computed marginals and truth values of each variable Q
+    """
+
+    E_key_list = []
+    for key in sorted(E.keys()):
+        E_key_list.append(key)
+        
+    all_cpts = BN.get_all_cpts()
+    # reduce all cpts with factor E
+    for key in all_cpts:
+        cpt_recuded = BN.reduce_factor(E, all_cpts[key])
+        # deletes cells with p = 0
+        BN.update_cpt(key, cpt_recuded)
+    
+    # eliminate in min degree order 
+    pi = min_degree_order(BN)
+    summing_out = compute_marginals(pi, BN)
+
+    # if more variables are asked
+    if len(Q) > 1:
+        df_posterior_marginal = merge_columns(summing_out, Q)
+    # if one variable
+    else:
+        df_posterior_marginal = summing_out[Q[0]]
+    
+    return df_posterior_marginal
 
 
 if __name__ == '__main__':
@@ -99,12 +173,16 @@ if __name__ == '__main__':
     network = BNReasoner(file_path)
     BN = network.bn
 
-    evidence = []
+    E = pd.Series({'Winter?' : True})
     Q = ['Wet Grass?', 'Slippery Road?']
 
-    if evidence == None or evidence == []:
+    if len(E) == 0:
         distribution = prior_marginal(Q, BN)
         print(distribution)
+    else:
+        distribution = posterior_marginal(E, Q, BN)
+        print(distribution)
+
      
 
     
