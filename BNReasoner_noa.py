@@ -92,13 +92,14 @@ def merge_columns(df_summed_out: pd.DataFrame, Q: list):
     :return: pandas dataframe with the merged multiplication column 'p' and each variable Q truth assignment column
     """
 
+    # merge all columns 
     df_merged = df_summed_out[Q[0]]
     for i in range(len(Q)-1):
         df_merged = df_merged.merge(df_summed_out[Q[i+1]], how='cross')
     df_pior_marginal = df_merged[Q]
     df_values = df_merged.drop(columns = Q)
     
-    # multiply all columns
+    # multiply all columns-values
     p_multiplied = df_values.iloc[:, 0]
     for i in range(len(df_values.columns)-1):
         p_multiplied *= df_values.iloc[:, i+1]
