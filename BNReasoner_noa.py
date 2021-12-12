@@ -142,40 +142,49 @@ def posterior_marginal(E: pd.Series, Q: list, BN: BayesNet):
     :param BN: BayesNet class
     :return: pandas dataframe with the computed marginals and truth values of each variable Q
     """
-
     E_key_list = []
     for key in sorted(E.keys()):
         E_key_list.append(key)
-        
+
     all_cpts = BN.get_all_cpts()
     # reduce all cpts with factor E
     for key in all_cpts:
         cpt_recuded = BN.reduce_factor(E, all_cpts[key])
         # deletes cells with p = 0
         BN.update_cpt(key, cpt_recuded)
-    
+
     # eliminate in min degree order 
     pi = min_degree_order(BN)
     summing_out = compute_marginals(pi, BN)
-
     # if more variables are asked
     if len(Q) > 1:
-        df_posterior_marginal = merge_columns(summing_out, Q)
+        df_post_marg = merge_columns(summing_out, Q)
     # if one variable
     else:
-        df_posterior_marginal = summing_out[Q[0]]
+        df_post_marg = summing_out[Q[0]]
     
-    return df_posterior_marginal
+    # normalising
+    if len(E.index.values) > 1:
+        df_pr = merge_columns(summing_out, E.index.values)  # merge columns of Pr 
+        pr = df_pr[df_pr['p'] != 0]['p'].values[0]          # get Pr value of evidence
+        df_post_marg['p'] = df_post_marg['p'] / pr          # normalise by Pr of evidence
+    else:
+        df_pr = summing_out[E.index.values[0]]              # merge columns of Pr 
+        pr = df_pr[df_pr['p'] !=0]['p'].values              # get Pr value of evidence
+        df_post_marg['p'] = df_post_marg['p'] / pr          # normalise by Pr of evidence
+
+    return df_post_marg
 
 
 if __name__ == '__main__':
 
-    file_path = "testing/lecture_example.BIFXML"
+    file_path = "testing/lecture_example3.BIFXML"
     network = BNReasoner(file_path)
     BN = network.bn
 
-    E = pd.Series({'Winter?' : True})
-    Q = ['Wet Grass?', 'Slippery Road?']
+    #E = pd.Series({"Winter?": True, "Sprinkler?": False})
+    E = pd.Series({"Winter?": True})
+    Q = ['Rain?']
 
     if len(E) == 0:
         distribution = prior_marginal(Q, BN)
