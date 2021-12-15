@@ -180,115 +180,15 @@ class BayesNet:
         nx.draw(Graph, with_labels=True, node_size=3000)
         plt.show()
 
-    def min_degree_order(self):
-        """
-        Returns a oder in elimination order.
-        :return: ordering pi of variables 
-        """
-        pi_list = []
-        all_vars = self.get_all_variables()
-        G = self.get_interaction_graph()
-        # variable with least amount of neighbours
-        while len(all_vars) > 0:
-            pi = min(G.degree(all_vars), key=operator.itemgetter(1))[0]
-            pi_list.append(pi)
-            # all the neigbours of var_min_neighvours
-            neighbours_pi = list(G.neighbors(pi))
-            # add edge between non-ajacent neighbours
-            for n in neighbours_pi:
-                for n2 in neighbours_pi:
-                    if G.number_of_edges(n,n2) == 0 and n is not n2:
-                        G.add_edge(n, n2)
-            G.remove_node(pi)
-            all_vars.remove(pi)
-            #self.draw_interaction(G)
-        return pi_list
-
-
     def get_neighbors(self, graph, variable):
         """
         Returns the neighbors from the interaction graph of a given variable.
         :return: The variable neighbors from the given variable based on the constructed interaction graph.
         """
         neighbors = nx.neighbors(graph, variable)
+
+        return neighbors   
     
-        return neighbors
-        
-        
-
-
-    def summing_out(self, variable) -> None:
-        """
-        Sums out variable of all the tables in all_cpts and updates the table
-        :param: variable: the variable to be summed out
-        :return: None.
-        """
-        all_cpts = self.get_all_cpts()
-        variable_cpt = all_cpts[variable]
-        for key in all_cpts:
-            # if the variable is part of conditional probability but not cps of variable itsself 
-            list_of_vars = list(all_cpts[key].columns)
-            if variable == list_of_vars[0] and variable != key and len(list_of_vars) > 2:
-                cpt = all_cpts[key]
-                variable_true_table = variable_cpt.loc[variable_cpt[variable] == True]
-                variable_true_value = float(variable_true_table['p'].values)
-                variable_false_table = variable_cpt.loc[variable_cpt[variable] == False]
-                variable_false_value = float(variable_false_table['p'].values)
-                # mutiplies factors
-                cpt['p'] = cpt['p'] * np.where(cpt[variable] == True, variable_true_value, variable_false_value)
-                # list of variables that should stay in table
-                in_between_vars = list_of_vars[1:-1]
-                # summing out variable
-                cpt = cpt.groupby(in_between_vars, as_index=False)['p'].sum()
-                # update dictionary with new table
-                self.update_cpt(key, cpt)
-    
-    def prior_marginal(self, Q):
-        """
-        computes the prior marginal P(Q)
-        :param: Q: subset of variables
-        :return: None.
-        """
-
-        all_cpts = self.get_all_cpts()
-        # eliminate in min degree order 
-        pi = self.min_degree_order()
-        for x in pi:
-            self.summing_out(x)
-        all_cpts = self.get_all_cpts()
-        #TODO: combine relevant tables
-        for key in all_cpts:
-            if key in Q :
-                print(all_cpts[key])
-    
-    def posteriour_marginal(self, E, Q) -> None:
-        """
-        Sums out variable of all the tables in all_cpts and updates the table
-        :param: E: evidence
-        :param: Q: subset of variables
-        :return: None.
-        """
-        E_key_list = []
-        for key in sorted(E.keys()):
-            E_key_list.append(key)
-            
-        all_cpts = self.get_all_cpts()
-        # reduce all cpts with factor E
-        for key in all_cpts:
-            cpt_recuded = self.reduce_factor(E, all_cpts[key])
-            # deletes cells with p = 0
-            self.update_cpt(key, cpt_recuded)
-        # eliminate in min degree order 
-        pi = self.min_degree_order()
-        for x in pi:
-            self.summing_out(x)
-        all_cpts = self.get_all_cpts()
-        #TODO: combine relevant tables
-        for key in all_cpts:
-            if key in Q :
-                print(all_cpts[key])
-
-     
     @staticmethod
     def get_compatible_instantiations_table(instantiation: pd.Series, cpt: pd.DataFrame):
         """
@@ -333,6 +233,7 @@ class BayesNet:
             return new_cpt
         else:
             return cpt
+              
 
     def draw_structure(self) -> None:
         """
@@ -354,6 +255,7 @@ class BayesNet:
         else:
             self.structure.add_node(variable, cpt=cpt)
 
+    
     def add_edge(self, edge: Tuple[str, str]) -> None:
         """
         Add a directed edge to the BN.

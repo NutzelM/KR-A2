@@ -67,14 +67,14 @@
     </DEFINITION>
     <DEFINITION>
         <FOR>X</FOR>
-        <GIVEN>I</GIVEN>
         <GIVEN>J</GIVEN>
+        <GIVEN>I</GIVEN>
         <TABLE>0.95 0.05 0.95 0.05 0.95 0.05 0.05 0.95</TABLE> <!-- Order: Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
         <FOR>O</FOR>
-        <GIVEN>X</GIVEN>
         <GIVEN>Y</GIVEN>
+        <GIVEN>X</GIVEN>
         <TABLE>0.98 0.02 0.02 0.98 0.02 0.98 0.02 0.98</TABLE>
     </DEFINITION>
 </NETWORK>
