@@ -58,10 +58,8 @@ def min_degree_order(variables):
     while len(variables) > 0:
         
         num_neighbors = dict(graph.degree(variables))
-        for key in num_neighbors:
-            print(f"the num of neighbours of var {key} is {num_neighbors[key]}")
         min_pi = min(num_neighbors, key=num_neighbors.get)
-        print(f"the min pi is {min_pi}")
+        #print(f"the min pi is {min_pi}")
         pi_order.append(min_pi)
 
         neighbors_pi = list(graph.neighbors(min_pi))
@@ -76,29 +74,39 @@ def min_degree_order(variables):
 
     return pi_order
 
-def normalise(cpt, evidence):
-    var_names = evidence.index.values
-    keys_to_multiply = []
-    for var in var_names:
-        keys_to_multiply.append(var)
+def normalise(cpt_to_be_normalised, evidence):
     all_cpts = BN.get_all_cpts()
-    cpt_evidence = multiply_cpts(all_cpts, keys_to_multiply)
-    normalisation_value = cpt_evidence.values[0][-1]
-    print(f"normalisation value : {normalisation_value}")
-    cpt['p'] = (1/normalisation_value)* cpt['p']
-    return cpt
+    normalisation_value = 1
+    for var in evidence.index.values:
+        #print(f"len of cpts of {var} is {len(all_cpts[var])}")
+        cpt = all_cpts[var]
+        # if value is not in a 1x1 table, multiply sum out the other values
+        if len(cpt) > 1: 
+            keys_to_multiply = []
+            for key in all_cpts:
+                columns = list(all_cpts[key].index.column)[:-1]
+                if var in columns:
+                    keys_to_multiply.append(key)
+            cpt = multiply_cpts(all_cpts, keys_to_multiply)
+            for c in columns:
+                cpt = sum_out(cpt, c) 
+        normalisation_value = normalisation_value*cpt.values[0][-1]
+    #print(f"normalisation value is {normalisation_value}")
+    cpt_to_be_normalised['p'] = (1/normalisation_value)* cpt_to_be_normalised['p']
+    return cpt_to_be_normalised
 
 def multiply_cpts(all_cpts, keys_to_multiply):
     cpt = all_cpts[keys_to_multiply[0]]
     for i in range(1, len(keys_to_multiply)):
         cpt_new = all_cpts[keys_to_multiply[i]]
+        #print(f"intersection of {list(cpt.columns[:-1])} and {list(cpt_new.columns[:-1])}")
         columns = cpt.columns[:-1].intersection(cpt_new.columns[:-1]).tolist()
         merge_vars = cpt.merge(cpt_new, on =columns ) 
         cpt = merge_vars.assign(p = merge_vars.p_x*merge_vars.p_y).drop(columns=['p_x', 'p_y'])
     return cpt
 
 def max_out(cpt, var):
-    print(f"MAXING OUT {var}")
+    #print(f"MAXING OUT {var}")
     staying_vars = list(cpt.columns.values)[:-1]
     staying_vars.remove(var)
     if len(cpt.index) > 2:
@@ -110,12 +118,12 @@ def max_out(cpt, var):
     return new_cpt  
 
 def sum_out(cpt, var):
-    print(f"SUMMING OUT {var}")
+    #print(f"SUMMING OUT {var}")
     staying_vars = list(cpt.columns.values)[:-1]
     staying_vars.remove(var)
-    print(f"old cpt is \n {cpt}")
+    #print(f"old cpt is \n {cpt}")
     cpt = cpt.groupby(staying_vars, as_index=False)['p'].sum()
-    print(f"new cpt is \n {cpt}")
+    #print(f"new cpt is \n {cpt}")
     return cpt
 
 def posteriour_marginal(Q, evidence): 
@@ -125,12 +133,10 @@ def posteriour_marginal(Q, evidence):
     for key in all_cpts:
         all_cpts[key] = reduce(evidence, all_cpts[key], key)
     all_vars = BN.get_all_variables()
-    evidence_vars = list(evidence.index.values)
     # in order to compute P(Q, e)
-    pi = list(set(all_vars) - set(Q) - set(evidence_vars))
+    pi = list(set(all_vars) - set(Q))
     pi = min_degree_order(pi)
-    print(f"PI IS {pi}")
-    
+    #print(f"PI IS {pi}")
     for i in range(len(pi)):
         keys_to_multiply = []
         for key in all_cpts:
@@ -147,6 +153,7 @@ def posteriour_marginal(Q, evidence):
         all_cpts[list(cpt.columns.values)[-2]] = cpt
     first_key = list(all_cpts.keys())[0]
     final_cpt = all_cpts[first_key]
+    #print("multiply final cts ")
     if len(all_cpts) > 1:
         final_keys_to_multiply = [first_key]
         for key in all_cpts:
@@ -154,7 +161,6 @@ def posteriour_marginal(Q, evidence):
                 final_keys_to_multiply.append(key)
         final_cpt = multiply_cpts(all_cpts, final_keys_to_multiply)
     final_cpt = normalise(final_cpt, evidence)
-    final_cpt = delete_evidence_columns(final_cpt, evidence)
     return final_cpt
 
 def prior_marginal(Q): 
@@ -203,7 +209,7 @@ def prune_edges(evidence) -> None:
     all_cpts = BN.get_all_cpts()
     for evi in E:
         neighbours = BN.get_children(evi)
-       # print(f"neighbours of {evi} are {list(neighbours)}")
+       # #print(f"neighbours of {evi} are {list(neighbours)}")
         if len(list(neighbours)) > 0:
             for e in neighbours:
                 BN.del_edge((evi,e))
@@ -298,11 +304,11 @@ if __name__ == '__main__':
     network = BNReasoner(file_path)
     BN = network.bn
     all_cpts = BN.get_all_cpts()
-    evidence = pd.Series({ 'Winter?' : True, 'Sprinkler?' : False})
+    evidence = pd.Series({'Winter?': True, 'Sprinkler?': False})
     M = ['I', 'J']
     Q =  ['Wet Grass?', 'Slippery Road?']
     all_cpts = BN.get_all_cpts()
-    print_cpts(all_cpts)
+    #print_cpts(all_cpts)
     #print(prior_marginal(Q))
     print(posteriour_marginal(Q, evidence))
     vars = BN.get_all_variables()
