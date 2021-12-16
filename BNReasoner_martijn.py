@@ -14,8 +14,4 @@ class BNReasoner:
             self.bn.load_from_bifxml(net)
         else:
             self.bn = net
-file_path = "testing/lecture_example.BIFXML"
-network = BNReasoner(file_path)
-print(network)
-
-    # TODO: This is where your methods should go
+# TODO: This is where your methods should go

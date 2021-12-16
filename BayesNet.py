@@ -1,13 +1,17 @@
+from os import name
 from typing import List, Tuple, Dict
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.algorithms.dag import descendants
 from numpy.core.fromnumeric import var
+from pandas.core.frame import DataFrame
 from pgmpy.readwrite import XMLBIFReader
 import math
 import itertools
 import pandas as pd
+import numpy as np
 from copy import deepcopy
+import operator 
 
 
 class BayesNet:
@@ -168,7 +172,23 @@ class BayesNet:
                     if not int_graph.has_edge(involved_vars[i], involved_vars[j]):
                         int_graph.add_edge(involved_vars[i], involved_vars[j])
         return int_graph
+    
+    def draw_interaction(self, Graph) -> None:
+        """
+        Visualize structure of the Graph.
+        """
+        nx.draw(Graph, with_labels=True, node_size=3000)
+        plt.show()
 
+    def get_neighbors(self, graph, variable):
+        """
+        Returns the neighbors from the interaction graph of a given variable.
+        :return: The variable neighbors from the given variable based on the constructed interaction graph.
+        """
+        neighbors = nx.neighbors(graph, variable)
+
+        return neighbors   
+    
     @staticmethod
     def get_compatible_instantiations_table(instantiation: pd.Series, cpt: pd.DataFrame):
         """
@@ -213,6 +233,7 @@ class BayesNet:
             return new_cpt
         else:
             return cpt
+              
 
     def draw_structure(self) -> None:
         """
@@ -234,6 +255,7 @@ class BayesNet:
         else:
             self.structure.add_node(variable, cpt=cpt)
 
+    
     def add_edge(self, edge: Tuple[str, str]) -> None:
         """
         Add a directed edge to the BN.
