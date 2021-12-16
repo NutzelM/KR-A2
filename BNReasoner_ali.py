@@ -52,7 +52,7 @@ class BNReasoner:
                             departures.add((child, 'up'))
         return True
 
-file_path = "testing/lecture_example.BIFXML"
+file_path = "testing/network-30.BIFXML"
 network = BNReasoner(file_path)
-print(network.is_dsep('Sprinkler?','Rain?',{'Winter?'}))
+print(network.is_dsep('a','f',{'c'}))
 network.bn.draw_structure()
