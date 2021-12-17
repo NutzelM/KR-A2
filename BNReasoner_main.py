@@ -300,7 +300,6 @@ def min_fill_order(variables):
     variables_dict = dict.fromkeys(variables, 0)
     while len(variables) > 0:
         # find the variable in variables where the most amount of edges have to be reated if it was removed
-        print(f"variables are now {variables}")
         for var1 in variables:
             neighbors_var1 = list(graph.neighbors(var1))
             for n_1 in neighbors_var1:
