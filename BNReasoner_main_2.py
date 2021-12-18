@@ -466,8 +466,9 @@ if __name__ == '__main__':
     file_path = "testing/network-20.BIFXML"
     network = BNReasoner(file_path)
     BN = network.bn
-    evidence = pd.Series({},dtype='object')
+    evidence = pd.Series({},dtype= object)
     M = []
-    Q =  []
+    Q =  ['x']
     possible_orderings = ['min_degree', 'min_fill', 'random']
     print(network.prior_marginal(Q,possible_orderings[0]))
+    network.bn.draw_structure()
