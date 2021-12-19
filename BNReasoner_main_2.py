@@ -484,11 +484,12 @@ if __name__ == '__main__':
     #print(network.MPE(evidence, possible_orderings[0]))
     #print(network.MPE(evidence, possible_orderings[0]))
     MPE_dataframe = None 
-    for i in range(10):
-        if i > 0:
+    for j in range(10):
+        print(j)
+        if j > 0:
             old_MPE_dataframe = MPE_dataframe
         MPE_2d_list = []
-        for i in range(10, 101, 10):
+        for i in range(10, 81, 10):
             print(i)
             file_path = f"testing/network-{i}.BIFXML"
             network = BNReasoner(file_path)
@@ -501,9 +502,8 @@ if __name__ == '__main__':
                 MPE_1d_list.append(end-start)
             MPE_2d_list.append(MPE_1d_list)
         print(MPE_2d_list)
-        MPE_2d_list.append(list(range(10,100,10)))
-        MPE_dataframe = pd.DataFrame(MPE_2d_list, columns = ['number of variables' ,'min degree heuristic', 'min fill heurisic', 'random (no heuristic'])
-        if i > 0:
+        MPE_dataframe = pd.DataFrame(MPE_2d_list, columns = ['min degree heuristic', 'min fill heurisic', 'random (no heuristic)'])
+        if j > 0:
             MPE_dataframe = (MPE_dataframe + old_MPE_dataframe)/2
         print(MPE_dataframe)
     
