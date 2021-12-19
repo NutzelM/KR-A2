@@ -4,13 +4,16 @@ from networkx.algorithms.assortativity import pairs
 
 from networkx.algorithms.dag import descendants
 from numpy import True_, multiply
+from pandas.core.frame import DataFrame
 from pandas.core.indexes.api import all_indexes_same
 from pandas.core.series import Series
+from BNReasoner_main import MPE
 from BayesNet import BayesNet
 import pandas as pd
 from copy import deepcopy
 from BayesNet import BayesNet
 import copy 
+import time 
 
 #TODO: add node pruning for posterior etc, fix normalisation function do it sums out all the vars not in evidence (hence also adding the velues from the other ctps)
 class BNReasoner:
@@ -90,10 +93,10 @@ class BNReasoner:
         returns : cpt
         """
         cpt_reduced = self.bn.reduce_factor(evidence, cpt)
-        cpt_recuced = self.delete_zero_rows(cpt_reduced)
-        BN.update_cpt(key ,cpt_recuced)
+        cpt_reduced = self.delete_zero_rows(cpt_reduced)
+        self.bn.update_cpt(key ,cpt_reduced)
         # drop columns all true/false
-        return cpt_recuced
+        return cpt_reduced
 
     def normalise(self, cpt_to_be_normalised, evidence):
         """ 
@@ -207,12 +210,13 @@ class BNReasoner:
         """
         E =  evidence.index.values
         for evi in E:
-            neighbours = BN.get_children(evi)
+            neighbours = self.bn.get_children(evi)
             if len(list(neighbours)) > 0:
                 for e in neighbours:
-                    BN.del_edge((evi,e))
-                    cpt_reduced = reduce(evidence, all_cpts[e], e)
-                    all_cpts[e] = self.sum_out(cpt_reduced, evi)
+                    self.bn.del_edge((evi,e))
+                    cpt_reduced = self.sum_out(all_cpts[e], evi)
+                    cpt_reduced = self.reduce(evidence, all_cpts[e], e)
+                    all_cpts[e] = cpt_reduced
         return all_cpts
 
     def prune_nodes(self, all_cpts, evidence, Q):
@@ -259,6 +263,8 @@ class BNReasoner:
         """
         if ordering == 'min_degree': 
             return  self.min_degree_order(variables)
+        if ordering == 'min_fill': 
+            return  self.min_fill_order(variables)
         if ordering == 'random':
             return variables
         print("no valid ordering method has been chosen, returning same order")
@@ -390,9 +396,9 @@ class BNReasoner:
         all_cpts = self.prune_edges(all_cpts, evidence)
         # update cpt for interaction graph of min_degree_order
         for key in all_cpts:
-            BN.update_cpt(key, all_cpts[key])
+            self.bn.update_cpt(key, all_cpts[key])
 
-        Q = BN.get_all_variables()
+        Q = self.bn.get_all_variables()
         pi = self.order(Q, ordering)
         # reduce with evidence    
         for key in all_cpts:
@@ -409,7 +415,7 @@ class BNReasoner:
             # save the new cpt under the name of the last collumn (besides p)
             all_cpts[pi[i]] = cpt
         
-        final_cpt = all_cpts[keys_to_multiply[0]]
+        final_cpt = all_cpts[list(all_cpts.keys())[0]]
         #  multiply remaining
         if len(all_cpts) > 1:
             final_cpt = self.multiply_cpts(all_cpts, list(all_cpts.keys()))
@@ -453,7 +459,7 @@ class BNReasoner:
             # save the new cpt under the name of the last collumn (besides p)
             all_cpts[pi[i]] = cpt
         
-        final_cpt = all_cpts[keys_to_multiply[0]]
+        final_cpt = all_cpts[list(all_cpts.keys())[0]]
         #  multiply remaining
         if len(all_cpts) > 1:
             final_cpt = self.multiply_cpts(all_cpts, list(all_cpts.keys()))
@@ -463,12 +469,31 @@ class BNReasoner:
 
 if __name__ == '__main__':
 
-    file_path = "testing/network-20.BIFXML"
+    file_path = "testing/lecture_example.BIFXML"
     network = BNReasoner(file_path)
     BN = network.bn
-    evidence = pd.Series({},dtype= object)
+    #evidence = pd.Series({},dtype= object)
+    
     M = []
-    Q =  ['x']
+    Q =  ['a']
+    #evidence = pd.Series({'Winter?': False, 'Rain?' : True})
+    evidence = pd.Series({'b': False, 'c' : True})
     possible_orderings = ['min_degree', 'min_fill', 'random']
-    print(network.prior_marginal(Q,possible_orderings[0]))
-    network.bn.draw_structure()
+    #print(network.MPE(evidence, possible_orderings[0]))
+    #print(network.MPE(evidence, possible_orderings[0]))
+    MPE_2d_list = []
+    for i in range(10, 101, 10):
+        print(i)
+        file_path = f"testing/network-{i}.BIFXML"
+        network = BNReasoner(file_path)
+        MPE_1d_list = []
+        for order in possible_orderings:
+            start = time.time()
+            result = network.MPE(evidence, order)
+            end = time.time()
+            print(f"appending {end - start} to columns {order}")
+            MPE_1d_list.append(end-start)
+        MPE_2d_list.append(MPE_1d_list)
+    print(MPE_2d_list)
+    MPE_dataframe = pd.DataFrame(MPE_2d_list, columns = ['min degree', 'min fill', 'random'])
+    print(MPE_dataframe)
