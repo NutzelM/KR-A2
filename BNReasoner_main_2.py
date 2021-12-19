@@ -14,6 +14,7 @@ from copy import deepcopy
 from BayesNet import BayesNet
 import copy 
 import time 
+import random
 
 #TODO: add node pruning for posterior etc, fix normalisation function do it sums out all the vars not in evidence (hence also adding the velues from the other ctps)
 class BNReasoner:
@@ -261,6 +262,7 @@ class BNReasoner:
         parameter ordering: method of choice
         returns: ordered variables po
         """
+        random.shuffle(variables)
         if ordering == 'min_degree': 
             return  self.min_degree_order(variables)
         if ordering == 'min_fill': 
@@ -386,6 +388,7 @@ class BNReasoner:
         return final_cpt
 
     def MPE(self, evidence, ordering):
+        start = time.time()
         """ 
         computes most likely instantaion based on evidence (by variable elimination)
         parameter evidence: series of evidence
@@ -405,6 +408,9 @@ class BNReasoner:
             all_cpts[key] = self.reduce(evidence, all_cpts[key], key)
         
         for i in range(len(pi)):
+            print(time.time() - start)
+            if (time.time() - start) >= 700:
+                return False
             # match pi[i] to all cpts that contain pi[i]
             keys_to_multiply = self.find_keys_to_multiply(all_cpts, pi[i])
             # multiply all these cpts
@@ -481,19 +487,28 @@ if __name__ == '__main__':
     possible_orderings = ['min_degree', 'min_fill', 'random']
     #print(network.MPE(evidence, possible_orderings[0]))
     #print(network.MPE(evidence, possible_orderings[0]))
-    MPE_2d_list = []
-    for i in range(10, 101, 10):
-        print(i)
-        file_path = f"testing/network-{i}.BIFXML"
-        network = BNReasoner(file_path)
-        MPE_1d_list = []
-        for order in possible_orderings:
-            start = time.time()
-            result = network.MPE(evidence, order)
-            end = time.time()
-            print(f"appending {end - start} to columns {order}")
-            MPE_1d_list.append(end-start)
-        MPE_2d_list.append(MPE_1d_list)
-    print(MPE_2d_list)
-    MPE_dataframe = pd.DataFrame(MPE_2d_list, columns = ['min degree', 'min fill', 'random'])
-    print(MPE_dataframe)
+    MPE_dataframe = None 
+    for i in range(10):
+        if i > 0:
+            old_MPE_dataframe = MPE_dataframe
+        MPE_2d_list = []
+        for i in range(10, 101, 10):
+            print(i)
+            file_path = f"testing/network-{i}.BIFXML"
+            network = BNReasoner(file_path)
+            MPE_1d_list = []
+            for order in possible_orderings:
+                start = time.time()
+                result = network.MPE(evidence, order)
+                end = time.time()
+                print(f"appending {end - start} to columns {order}")
+                MPE_1d_list.append(end-start)
+            MPE_2d_list.append(MPE_1d_list)
+        print(MPE_2d_list)
+        MPE_2d_list.append(list(range(10,100,10)))
+        MPE_dataframe = pd.DataFrame(MPE_2d_list, columns = ['number of variables' ,'min degree heuristic', 'min fill heurisic', 'random (no heuristic'])
+        if i > 0:
+            MPE_dataframe = (MPE_dataframe + old_MPE_dataframe)/2
+        print(MPE_dataframe)
+    
+    
