@@ -388,7 +388,6 @@ class BNReasoner:
         return final_cpt
 
     def MPE(self, evidence, ordering):
-        start = time.time()
         """ 
         computes most likely instantaion based on evidence (by variable elimination)
         parameter evidence: series of evidence
@@ -408,9 +407,6 @@ class BNReasoner:
             all_cpts[key] = self.reduce(evidence, all_cpts[key], key)
         
         for i in range(len(pi)):
-            print(time.time() - start)
-            if (time.time() - start) >= 700:
-                return False
             # match pi[i] to all cpts that contain pi[i]
             keys_to_multiply = self.find_keys_to_multiply(all_cpts, pi[i])
             # multiply all these cpts
