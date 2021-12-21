@@ -66,7 +66,7 @@
         <OUTCOME>False</OUTCOME>
     </VARIABLE>
     <VARIABLE TYPE="nature">
-        <NAME>Max?</NAME>
+        <NAME>Verstappen?</NAME>
         <OUTCOME>True</OUTCOME>
         <OUTCOME>False</OUTCOME>
     </VARIABLE>
@@ -79,59 +79,59 @@
     <!-- PCTs -->
     <DEFINITION>
         <FOR>Rain?</FOR>
-        <TABLE>0.15 0.85</TABLE>
+        <TABLE>0.85 0.15</TABLE>
     </DEFINITION>
     <DEFINITION>
         <FOR>Pole Position?</FOR>
-        <TABLE>0.59 0.41</TABLE>
+        <TABLE>0.41 0.59</TABLE>
     </DEFINITION>
     <DEFINITION>
         <FOR>Slippery Road?</FOR>
         <GIVEN>Rain?</GIVEN>
         <GIVEN>Clash?</GIVEN>
-        <TABLE>1.0 0.0 0.95 0.05 0.6 0.4 0.1 0.9</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.9 0.1 0.4 0.6 0.05 0.95 0.0 1.0</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
         <FOR>Clash?</FOR>
         <GIVEN>Pole Position?</GIVEN>
         <GIVEN>Rain?</GIVEN>
-        <TABLE>0.2 0.8 0.15 0.85 0.3 0.7 0.2 0.8</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.8 0.2 0.7 0.3 0.85 0.15 0.8 0.2</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
         <FOR>Highest Average Speed?</FOR>
         <GIVEN>Pole Position?</GIVEN>
         <GIVEN>Most Pitstops?</GIVEN>
-        <TABLE>0.4 0.6 0.7 0.3 0.2 0.8 0.6 0.4</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.4 0.6 0.8 0.2 0.3 0.7 0.6 0.4</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
         <FOR>Sliding?</FOR>
         <GIVEN>Rain?</GIVEN>
         <GIVEN>Slippery Road?</GIVEN>
-        <TABLE>0.7 0.3 0.4 0.6 0.15 0.85 0.2 0.8</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.8 0.2 0.85 0.15 0.6 0.4 0.3 0.7</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
         <FOR>Most Pitstops?</FOR>
         <GIVEN>Slippery Road?</GIVEN>
         <GIVEN>Sliding?</GIVEN>
-        <TABLE>0.7 0.3 0.15 0.85 0.9 0.1 0.4 0.6</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.6 0.4 0.1 0.9 0.85 0.15 0.3 0.7</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
         <FOR>Time Penalty?</FOR>
         <GIVEN>Clash?</GIVEN>
         <GIVEN>Highest Average Speed?</GIVEN>
-        <TABLE>0.75 0.25 0.5 0.5 0.25 0.75 0.2 0.8</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.8 0.2 0.75 0.25 0.5 0.5 0.25 0.75</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
-        <FOR>Max?</FOR>
+        <FOR>Verstappen?</FOR>
         <GIVEN>Most Pitstops?</GIVEN>
         <GIVEN>Time Penalty?</GIVEN>
-        <TABLE>0.3 0.7 0.6 0.4 0.7 0.3 0.8 0.2</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.2 0.8 0.3 0.7 0.4 0.6 0.7 0.3</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
     <DEFINITION>
         <FOR>Hamilton?</FOR>
         <GIVEN>Most Pitstops?</GIVEN>
         <GIVEN>Time Penalty?</GIVEN>
-        <TABLE>0.35 0.65 0.7 0.3 0.7 0.3 0.9 0.1</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
+        <TABLE>0.1 0.9 0.3 0.7 0.3 0.7 0.65 0.35</TABLE> <!-- Order? Rain?, Sprinkler?, Wet Grass?-->
     </DEFINITION>
 </NETWORK>
 </BIF>
