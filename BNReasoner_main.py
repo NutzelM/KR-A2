@@ -111,8 +111,11 @@ class BNReasoner:
             cpt = all_cpts[var]
             # if value is not in a 1x1 table, mutiply 
             if len(cpt) > 1: 
-                keys_to_multiply = self.find_keys_to_multiply(all_cpts, var)
+                keys_to_multiply = list(cpt.columns.values)[:-1]
                 cpt = self.multiply_cpts(all_cpts, keys_to_multiply)
+                for key in list(cpt.columns.values)[:-1]:
+                    if key != var:
+                        cpt = self.sum_out(cpt, key)
             normalisation_value = normalisation_value*cpt.values[0][-1]
         cpt_to_be_normalised['p'] = (1/normalisation_value)* cpt_to_be_normalised['p']
         return cpt_to_be_normalised
@@ -384,6 +387,8 @@ class BNReasoner:
         for c in list(final_cpt.columns.values)[:-1]:
             if c not in Q:
                 final_cpt = self.sum_out(final_cpt, c)
+      
+        
         return final_cpt
     
     def MPE(self, evidence, ordering):
@@ -471,21 +476,16 @@ class BNReasoner:
 
 if __name__ == '__main__':
 
-    file_path = "testing/lecture_example.BIFXML"
+    file_path = "testing/formula1.BIFXML"
     network = BNReasoner(file_path)
     BN = network.bn
     #evidence = pd.Series({},dtype= object)
     
-    M = ['a']
-    Q =  ['a']
-    #evidence = pd.Series({'Winter?': False, 'Rain?' : True})
-    evidence = pd.Series({'b': False, 'c' : True})
-    possible_orderings = ['min_degree', 'min_fill', 'random']
-    all_cpts = network.bn.get_all_cpts()
-    print(all_cpts['Rain?'])
-    cpt = network.max_out(all_cpts['Rain?'], 'Winter?')
-    print(cpt)
-    #print(network.MPE(evidence, possible_orderings[0]))
+    q = ['a']
+    Q =  ['Verstappen?']
+    evidence = pd.Series({'Rain?': True, 'Time Penalty?': True})
+
+    print(network.posteriour_marginal(Q, evidence, 'random'))
     #print(network.MPE(evidence, possible_orderings[0]))
     # MPE_dataframe = None
     # MAP_dataframe = None 
