@@ -150,13 +150,17 @@ class BNReasoner:
         parameters: cpt, var: variable that will be maxed out
         returns : cpt 
         """
+
         staying_vars = list(cpt.columns.values)[:-1]
         staying_vars.remove(var)
         if len(cpt.index) > 2:
-            new_cpt = cpt.groupby(staying_vars, as_index=False)['p'].max()
+            new_cpt = cpt.sort_values(['p'], ascending=False).drop_duplicates(subset=staying_vars, keep='first')
         else: 
-            new_cpt = cpt[cpt['p']== cpt['p'].max()] 
+            new_cpt = cpt[cpt['p']== cpt['p'].max()]
+        # updates evidence with the 
+
         return new_cpt  
+
 
     def sum_out(self, cpt, var):
         """ 
@@ -411,6 +415,7 @@ class BNReasoner:
         for i in range(len(pi)):
             # match pi[i] to all cpts that contain pi[i]
             keys_to_multiply = self.find_keys_to_multiply(all_cpts, pi[i])
+            print(f"keys to multiply are {keys_to_multiply}")
             # multiply all these cpts
             cpt = self.multiply_cpts(all_cpts, keys_to_multiply)
             cpt = self.max_out(cpt, pi[i])
@@ -420,7 +425,7 @@ class BNReasoner:
             all_cpts[pi[i]] = cpt
         
         final_cpt = all_cpts[list(all_cpts.keys())[0]]
-        
+        print(f"final cpts are {list(all_cpts.keys())}")
 
         #  multiply remaining
         if len(all_cpts) > 1:
@@ -470,6 +475,7 @@ class BNReasoner:
         final_cpt = all_cpts[list(all_cpts.keys())[0]]
         #  multiply remaining
         if len(all_cpts) > 1:
+            print("multiply remaining")
             final_cpt = self.multiply_cpts(all_cpts, list(all_cpts.keys()))
             
         final_cpt = final_cpt[final_cpt['p']== final_cpt['p'].max()]
@@ -482,51 +488,50 @@ if __name__ == '__main__':
     file_path = "testing/formula1.BIFXML"
     possible_orderings = ['min_degree', 'min_fill', 'random']
 
-    # prior results
-    network = BNReasoner(file_path)
-    BN = network.bn
-    result_prior = network.prior_marginal(Q=['Verstappen?', 'Hamilton?'], 
-                                          ordering=possible_orderings[0])
+    # # prior results
+    # network = BNReasoner(file_path)
+    # BN = network.bn
+    # result_prior = network.prior_marginal(Q=['Verstappen?', 'Hamilton?'], 
+    #                                       ordering=possible_orderings[0])
 
-    # posterior results 1
-    network = BNReasoner(file_path)
-    BN = network.bn
-    result_post1 = network.posteriour_marginal(Q=['Verstappen?'],
-                                              evidence=pd.Series({'Rain?': False,
-                                                                  'Pole Position?': True,
-                                                                  'Most Pitstops?':False, 
-                                                                  'Time Penalty?':True}), 
-                                              ordering=possible_orderings[0])
+    # # posterior results 1
+    # network = BNReasoner(file_path)
+    # BN = network.bn
+    # result_post1 = network.posteriour_marginal(Q=['Verstappen?'],
+    #                                           evidence=pd.Series({'Rain?': False,
+    #                                                               'Pole Position?': True,
+    #                                                               'Most Pitstops?':False, 
+    #                                                               'Time Penalty?':True}), 
+    #                                           ordering=possible_orderings[0])
 
-    # posterior results 2
-    network = BNReasoner(file_path)
-    BN = network.bn
-    result_post2 = network.posteriour_marginal(Q=['Hamilton?'],
-                                              evidence=pd.Series({'Rain?': False,
-                                                                  'Pole Position?': False,
-                                                                  'Time Penalty?':False}), 
-                                              ordering=possible_orderings[0])
+    # # posterior results 2
+    # network = BNReasoner(file_path)
+    # BN = network.bn
+    # result_post2 = network.posteriour_marginal(Q=['Hamilton?'],
+    #                                           evidence=pd.Series({'Rain?': False,
+    #                                                               'Pole Position?': False,
+    #                                                               'Time Penalty?':False}), 
+    #                                           ordering=possible_orderings[0])
 
     # map results
     network = BNReasoner(file_path)
     BN = network.bn
-    result_map = network.MAP(M=['Verstappen?', 'Hamilton?'], 
-                             evidence=pd.Series({'Rain?': False,
+    result_map = network.MPE(evidence=pd.Series({'Rain?': False,
                                                 'Clash?': True
                                                  }), 
                             ordering=possible_orderings[0])
+    print(result_map)
+    # # mpe results 1
+    # network = BNReasoner(file_path)
+    # BN = network.bn
+    # result_mpe1 = network.MPE(evidence=pd.Series({'Verstappen?': True}),
+    #                        ordering=possible_orderings[0])
 
-    # mpe results 1
-    network = BNReasoner(file_path)
-    BN = network.bn
-    result_mpe1 = network.MPE(evidence=pd.Series({'Verstappen?': True}),
-                           ordering=possible_orderings[0])
-
-    # mpe results 2
-    network = BNReasoner(file_path)
-    BN = network.bn
-    result_mpe2 = network.MPE(evidence=pd.Series({'Hamilton?': False}),
-                          ordering=possible_orderings[0])
+    # # mpe results 2
+    # network = BNReasoner(file_path)
+    # BN = network.bn
+    # result_mpe2 = network.MPE(evidence=pd.Series({'Hamilton?': False}),
+    #                       ordering=possible_orderings[0])
 
     # computing time for MPE and MAP using different testdata
     # file_path = "testing/lecture_example.BIFXML"
