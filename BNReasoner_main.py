@@ -15,7 +15,6 @@ import copy
 import time 
 import random
 
-#TODO: add node pruning for posterior etc, fix normalisation function do it sums out all the vars not in evidence (hence also adding the velues from the other ctps)
 class BNReasoner:
     def __init__(self, net: Union[str, BayesNet]):
         """
@@ -421,10 +420,12 @@ class BNReasoner:
             all_cpts[pi[i]] = cpt
         
         final_cpt = all_cpts[list(all_cpts.keys())[0]]
+        
+
         #  multiply remaining
         if len(all_cpts) > 1:
             final_cpt = self.multiply_cpts(all_cpts, list(all_cpts.keys()))
-            
+        
         final_cpt = final_cpt[final_cpt['p']== final_cpt['p'].max()]
         return final_cpt
 
@@ -476,17 +477,64 @@ class BNReasoner:
 
 if __name__ == '__main__':
 
+
+    #file_path = "testing/lecture_example.BIFXML"
     file_path = "testing/formula1.BIFXML"
+    possible_orderings = ['min_degree', 'min_fill', 'random']
+
+    # prior results
     network = BNReasoner(file_path)
     BN = network.bn
-    #evidence = pd.Series({},dtype= object)
-    
-    q = ['a']
-    Q =  ['Verstappen?']
-    evidence = pd.Series({'Rain?': True, 'Time Penalty?': True})
+    result_prior = network.prior_marginal(Q=['Verstappen?', 'Hamilton?'], 
+                                          ordering=possible_orderings[0])
 
-    print(network.posteriour_marginal(Q, evidence, 'random'))
-    #print(network.MPE(evidence, possible_orderings[0]))
+    # posterior results 1
+    network = BNReasoner(file_path)
+    BN = network.bn
+    result_post1 = network.posteriour_marginal(Q=['Verstappen?'],
+                                              evidence=pd.Series({'Rain?': False,
+                                                                  'Pole Position?': True,
+                                                                  'Most Pitstops?':False, 
+                                                                  'Time Penalty?':True}), 
+                                              ordering=possible_orderings[0])
+
+    # posterior results 2
+    network = BNReasoner(file_path)
+    BN = network.bn
+    result_post2 = network.posteriour_marginal(Q=['Hamilton?'],
+                                              evidence=pd.Series({'Rain?': False,
+                                                                  'Pole Position?': False,
+                                                                  'Time Penalty?':False}), 
+                                              ordering=possible_orderings[0])
+
+    # map results
+    network = BNReasoner(file_path)
+    BN = network.bn
+    result_map = network.MAP(M=['Verstappen?', 'Hamilton?'], 
+                             evidence=pd.Series({'Rain?': False,
+                                                'Clash?': True
+                                                 }), 
+                            ordering=possible_orderings[0])
+
+    # mpe results 1
+    network = BNReasoner(file_path)
+    BN = network.bn
+    result_mpe1 = network.MPE(evidence=pd.Series({'Verstappen?': True}),
+                           ordering=possible_orderings[0])
+
+    # mpe results 2
+    network = BNReasoner(file_path)
+    BN = network.bn
+    result_mpe2 = network.MPE(evidence=pd.Series({'Hamilton?': False}),
+                          ordering=possible_orderings[0])
+
+    # computing time for MPE and MAP using different testdata
+    # file_path = "testing/lecture_example.BIFXML"
+    # network = BNReasoner(file_path)
+    # BN = network.bn
+ 
+    # print(network.posteriour_marginal(Q, evidence, 'random'))
+    # print(network.MPE(evidence, possible_orderings[0]))
     # MPE_dataframe = None
     # MAP_dataframe = None 
     # for j in range(10):
